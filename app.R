@@ -24,7 +24,7 @@ ui <- fluidPage(
     sidebarPanel(
       sliderInput("numberOfGenes",
                   "Number of Genes",
-                  min = 2,
+                  min = 10,
                   max = 100,
                   value = 50),
       
