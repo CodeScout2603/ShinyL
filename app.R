@@ -1,4 +1,3 @@
-
 library(shiny)
 library(golubEsets)
 library(RColorBrewer)
@@ -11,7 +10,7 @@ data(Golub_Train)
 
 x <- exprs(Golub_Train)
 
-# Sample-Namen anpassen
+# Sample-Namen erstellen
 sample_labels <- paste(
   pData(Golub_Train)$Samples,
   pData(Golub_Train)$ALL.AML,
@@ -19,22 +18,22 @@ sample_labels <- paste(
 )
 colnames(x) <- sample_labels
 
-# Log2-Transformation mit pmax (sicher und schnell)
+# Log2-Transformation
 xLog <- log2(pmax(x, 1))
 
 # Patientenzahlen
 num_ALL <- sum(pData(Golub_Train)$ALL.AML == "ALL")
 num_AML <- sum(pData(Golub_Train)$ALL.AML == "AML")
 
-# Varianz der Gene berechnen
+# Varianzberechnung
 geneVariance <- apply(xLog, 1, var)
 sortedGenes <- names(sort(geneVariance, decreasing = TRUE))
 
-# Annotation für Samples (Spalten!)
+# Annotation (für Spalten!)
 annotation <- data.frame(
   Leukemia = pData(Golub_Train)$ALL.AML
 )
-rownames(annotation) <- sample_labels
+rownames(annotation) <- colnames(xLog)
 
 # -------------------------
 # UI
@@ -89,20 +88,13 @@ server <- function(input, output) {
   output$heatmap <- renderPlot({
     
     mat <- selectedGenes()
-    mat_t <- t(mat)
-    
-    # Validierung für binary Distanz
-    validate(
-      need(!(input$distMea == "binary" && !all(mat_t %in% c(0, 1))),
-           "Binary distance braucht 0/1 Daten.")
-    )
     
     pheatmap(
-      mat_t,
+      mat,   # << NICHT transponiert!
       clustering_distance_rows = input$distMea,
       clustering_distance_cols = input$distMea,
       clustering_method = input$clustMeth,
-      annotation_col = annotation,   # <- KORREKT! (Samples = columns)
+      annotation_col = annotation,
       color = colorRampPalette(brewer.pal(8, "Blues"))(25),
       fontsize = 9,
       main = "Heatmap der Top-variablen Gene"
@@ -110,5 +102,4 @@ server <- function(input, output) {
   })
 }
 
-# App starten
 shinyApp(ui, server)
