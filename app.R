@@ -1,25 +1,44 @@
+
+# benötigte Pakete
+library(shiny)
 library(golubEsets)
-# collect the data
+library(RColorBrewer)
+library(pheatmap)
+
+# -------------------------
+# Daten laden und vorbereiten
+# -------------------------
 data(Golub_Train)
-# get the expression data
-x = exprs(Golub_Train)
-# indicate for each patient ALL or AML
-colnames(x) <- paste(pData(Golub_Train)$Samples, pData(Golub_Train)$ALL.AML, sep="_")
-# set all values to at least 1 to avoid NaNs
-xWithoutLT1 = replace(x, x<1,1)
-# logarithmize x 
-xLogarithmised = log2(xWithoutLT1)
 
+x <- exprs(Golub_Train)
 
-# Anzahl ALL und AML bestimmen
+# Sample-Namen schöner gestalten
+colnames(x) <- paste(
+  pData(Golub_Train)$Samples, 
+  pData(Golub_Train)$ALL.AML, 
+  sep = "_"
+)
+
+# Werte < 1 auf 1 setzen und log2 transformieren
+xLog <- log2(pmax(x, 1))
+
+# Patientenzahlen bestimmen
 num_ALL <- sum(pData(Golub_Train)$ALL.AML == "ALL")
 num_AML <- sum(pData(Golub_Train)$ALL.AML == "AML")
-# ------------------------
 
-# RColorBrewer for better color of the heatmap
-library("RColorBrewer")
+# Varianz der Gene einmalig berechnen (Performance!)
+geneVariance <- apply(xLog, 1, var)
+sortedGenes <- names(sort(geneVariance, decreasing = TRUE))
 
-# user interface object
+# Annotation für Heatmap
+annotation <- data.frame(
+  Type = pData(Golub_Train)$ALL.AML
+)
+rownames(annotation) <- colnames(xLog)
+
+# -------------------------
+# UI Definition
+# -------------------------
 ui <- fluidPage(
   
   titlePanel("Heatmap of Patients and Genes"),
@@ -27,8 +46,11 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       h4("Anzahl Patienten"),
-      p(paste("ALL:", num_ALL)),
-      p(paste("AML:", num_AML)),
+      tags$ul(
+        tags$li(paste("ALL:", num_ALL)),
+        tags$li(paste("AML:", num_AML))
+      ),
+      
       sliderInput("numberOfGenes",
                   "Number of Genes",
                   min = 10,
@@ -50,23 +72,44 @@ ui <- fluidPage(
     ),
     
     mainPanel(
-      plotOutput("heatmap", height = 900)
+      plotOutput("heatmap", height = reactive({ input$numberOfGenes * 18 }))
     )
   )
 )
 
-# server logic unit
+# -------------------------
+# Server Logik
+# -------------------------
 server <- function(input, output) {
-  # rendering the heatmap plot
+  
+  # reaktive Auswahl der variabelsten Gene
+  selectedGenes <- reactive({
+    xLog[sortedGenes[1:input$numberOfGenes], ]
+  })
+  
   output$heatmap <- renderPlot({
-    # first the user chosen number of genes with the highest expression are selected
-    xHighestEX = xLogarithmised[names(sort(apply(xLogarithmised,1,var), decreasing=TRUE)[1:input$numberOfGenes]),]
-    # this matrix has now to be tranposed for better understanding of the heatmap
-    tx = t(xHighestEX)
-    # the heatmap is printet with the matrix the chosen dist and clust function and the blue color of RColorBrewer
-    heatmap(tx,distfun=function(c){dist(c,method=input$distMea)}, hclustfun=function(c){hclust(c,method=input$clustMeth)}, col= colorRampPalette(brewer.pal(8, "Blues"))(25))
+    
+    tx <- t(selectedGenes())
+    
+    # Validierung: binary Distanz benötigt binäre Matrix
+    validate(
+      need(!(input$distMea == "binary" && !all(tx %in% c(0, 1))),
+           "Binary distance erfordert binäre Daten (0/1).")
+    )
+    
+    # Heatmap zeichnen
+    pheatmap(
+      tx,
+      clustering_distance_rows = input$distMea,
+      clustering_distance_cols = input$distMea,
+      clustering_method = input$clustMeth,
+      annotation_row = annotation,
+      color = colorRampPalette(brewer.pal(8, "Blues"))(25),
+      fontsize = 9,
+      main = "Heatmap der Top-variablen Gene"
+    )
   })
 }
 
-# Generate the app
+# Shiny App starten
 shinyApp(ui, server)
