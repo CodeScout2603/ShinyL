@@ -1,156 +1,72 @@
-
-# -------------------------
-# Pakete laden
-# -------------------------
-library(shiny)
 library(golubEsets)
-library(RColorBrewer)
-library(pheatmap)
-library(heatmaply)
-
-# -------------------------
-# Golub-Daten laden
-# -------------------------
+# collect the data
 data(Golub_Train)
-x <- exprs(Golub_Train)
+# get the expression data
+x = exprs(Golub_Train)
+# indicate for each patient ALL or AML
+colnames(x) <- paste(pData(Golub_Train)$Samples, pData(Golub_Train)$ALL.AML, sep="_")
+# set all values to at least 1 to avoid NaNs
+xWithoutLT1 = replace(x, x<1,1)
+# logarithmize x 
+xLogarithmised = log2(xWithoutLT1)
 
-# Spaltennamen ALL/AML anhängen
-colnames(x) <- paste(
-  pData(Golub_Train)$Samples,
-  pData(Golub_Train)$ALL.AML,
-  sep = "_"
-)
 
-# Werte < 1 ersetzen (wegen log2)
-x[x < 1] <- 1
-
-# Log2
-x_log <- log2(x)
-
-# -------------------------
-# Patientenzahlen berechnen
-# -------------------------
+# Anzahl ALL und AML bestimmen
 num_ALL <- sum(pData(Golub_Train)$ALL.AML == "ALL")
 num_AML <- sum(pData(Golub_Train)$ALL.AML == "AML")
+# ------------------------
 
-# -------------------------
-# UI
-# -------------------------
+# RColorBrewer for better color of the heatmap
+library("RColorBrewer")
+
+# user interface object
 ui <- fluidPage(
-
-  titlePanel("Golub Heatmap – pheatmap & heatmaply"),
-
+  
+  titlePanel("Heatmap of Patients and Genes"),
+  
   sidebarLayout(
-
     sidebarPanel(
-
-      h3("Patientenübersicht"),
-      tags$div(
-        style="background:#e8f1ff;padding:8px;border-radius:5px;margin-bottom:6px;",
-        strong("ALL: "), num_ALL
-      ),
-      tags$div(
-        style="background:#ffe8e8;padding:8px;border-radius:5px;margin-bottom:12px;",
-        strong("AML: "), num_AML
-      ),
-
-      hr(),
-
+      h4("Anzahl Patienten"),
+      p(paste("ALL:", num_ALL)),
+      p(paste("AML:", num_AML)),
       sliderInput("numberOfGenes",
-                  "Anzahl Gene (höchste Varianz)",
-                  min = 10, max = 200, value = 50),
-
+                  "Number of Genes",
+                  min = 10,
+                  max = 100,
+                  value = 50),
+      
       selectInput("distMea",
-                  "Distanzmaß",
+                  "Distance Measure",
                   choices = c("euclidean", "maximum",
                               "manhattan", "canberra",
                               "binary", "minkowski")),
-
+      
       selectInput("clustMeth",
-                  "Clustering-Methode",
+                  "Clustering Method",
                   choices = c("ward.D", "ward.D2",
                               "single", "complete",
                               "average", "mcquitty",
                               "median", "centroid"))
     ),
-
+    
     mainPanel(
-      h3("Statische Heatmap (pheatmap)"),
-      plotOutput("pheat", height = 600),
-
-      hr(),
-
-      h3("Interaktive Heatmap (heatmaply)"),
-      heatmaplyOutput("interactive")
+      plotOutput("heatmap", height = 900)
     )
   )
 )
 
-# -------------------------
-# SERVER
-# -------------------------
+# server logic unit
 server <- function(input, output) {
-
-  # Reaktives Objekt: Gene mit höchster Varianz
-  selectedGenes <- reactive({
-    vars <- apply(x_log, 1, var)
-    names(sort(vars, decreasing = TRUE)[1:input$numberOfGenes])
-  })
-
-  # Reaktive Matrix (Z-Score Normalisierung)
-  selectedMatrix <- reactive({
-    m <- x_log[selectedGenes(), ]
-    t(scale(t(m)))   # Z-Score pro Gen
-  })
-
-  # Annotation: ALL / AML
-  annot <- reactive({
-    data.frame(
-      Typ = pData(Golub_Train)$ALL.AML,
-      row.names = colnames(x_log)
-    )
-  })
-
-  # -------------------------
-  # pheatmap (statisch)
-  # -------------------------
-  output$pheat <- renderPlot({
-
-    pheatmap(
-      selectedMatrix(),
-      annotation_col = annot(),
-      clustering_distance_rows = input$distMea,
-      clustering_distance_cols = input$distMea,
-      clustering_method = input$clustMeth,
-      scale = "none",
-      color = colorRampPalette(brewer.pal(9, "Blues"))(200),
-      show_rownames = FALSE,
-      fontsize_col = 8
-    )
-
-  })
-
-  # -------------------------
-  # Interaktive Heatmap
-  # -------------------------
-  output$interactive <- renderHeatmaply({
-
-    heatmaply(
-      selectedMatrix(),
-      colors = colorRampPalette(brewer.pal(9, "Blues"))(200),
-      k_col = 2,
-      k_row = 2,
-      Rowv = TRUE,
-      Colv = TRUE,
-      xlab = "Gene",
-      ylab = "Patienten",
-      main = "Interaktive Heatmap"
-    )
-
+  # rendering the heatmap plot
+  output$heatmap <- renderPlot({
+    # first the user chosen number of genes with the highest expression are selected
+    xHighestEX = xLogarithmised[names(sort(apply(xLogarithmised,1,var), decreasing=TRUE)[1:input$numberOfGenes]),]
+    # this matrix has now to be tranposed for better understanding of the heatmap
+    tx = t(xHighestEX)
+    # the heatmap is printet with the matrix the chosen dist and clust function and the blue color of RColorBrewer
+    heatmap(tx,distfun=function(c){dist(c,method=input$distMea)}, hclustfun=function(c){hclust(c,method=input$clustMeth)}, col= colorRampPalette(brewer.pal(8, "Blues"))(25))
   })
 }
 
-# -------------------------
-# App starten
-# -------------------------
+# Generate the app
 shinyApp(ui, server)
