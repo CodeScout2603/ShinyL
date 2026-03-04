@@ -9,3 +9,12 @@ Ich möchte lernen, wie man Websites baut.
 
 ## Kontakt
 Mehr Infos kommen bald.
+
+# AML und ALL Unterschied
+
+ALL= Akute lymphatische Leukämie
+
+AML= Akute myeloische Leukämie
+
+## ALL
+
