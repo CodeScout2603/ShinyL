@@ -18,3 +18,12 @@ AML= Akute myeloische Leukämie
 
 ## ALL
 
+-Ensteht aus lymphatischen Vorläuferzellen
+-Häufig bei kindern 
+-Symptome wie geschwollene lymphkonten, vergrößerte Leber/Milz und ZNS-Befall
+
+## AML
+
+-Ensteht aus myoelischen Vorläuferzellen
+-Häufig bei Erwachsenen
+-Symptome wie Hautinflitrate, Zahnfleischwucherungen oder stärker ausgeprägte Gerinnungsstörung
