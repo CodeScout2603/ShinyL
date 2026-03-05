@@ -9,7 +9,8 @@ colnames(x) <- paste(pData(Golub_Train)$Samples, pData(Golub_Train)$ALL.AML, sep
 xWithoutLT1 = replace(x, x<1,1)
 # logarithmize x 
 xLogarithmised = log2(xWithoutLT1)
-
+# sort the genenames for the table on the more info tab
+genes = data.frame(sort(rownames(x)))
 
 # Anzahl ALL und AML bestimmen
 num_ALL <- sum(pData(Golub_Train)$ALL.AML == "ALL")
@@ -18,6 +19,8 @@ num_AML <- sum(pData(Golub_Train)$ALL.AML == "AML")
 
 # RColorBrewer for better color of the heatmap
 library("RColorBrewer")
+# DT for inserting a table in tab: More Info
+library(DT)
 
 # user interface object
 ui <- fluidPage(
