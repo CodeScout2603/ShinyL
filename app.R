@@ -31,13 +31,7 @@ ui <- fluidPage(
     sidebarPanel(
      
 	 
- # >>> HIER: https://github.dev/CodeScout2603/ShinyL-/blob/main/app.R
-      tags$a(
-        href = "https://github.com/CodeScout2603/ShinyL-",
-        target = "_blank",
-        "🔗 Mein Code auf GitHub"
-      ),
-      br(), br(),
+ 
 
 	 h4("Anzahl Patienten"),
       p(paste("ALL:", num_ALL)),
@@ -60,6 +54,13 @@ ui <- fluidPage(
                               "single", "complete",
                               "average", "mcquitty",
                               "median", "centroid"))
+   # >>> HIER: https://github.dev/CodeScout2603/ShinyL-/blob/main/app.R
+      tags$a(
+        href = "https://github.com/CodeScout2603/ShinyL-",
+        target = "_blank",
+        "🔗 Mein Code auf GitHub"
+      ),
+      br(), br(), 
     ),
     
     mainPanel(
