@@ -34,7 +34,7 @@ ui <- fluidPage(
       p(paste("AML:", num_AML)),
       br(),
       
-      h4("⚙️ Einstellungen"),)
+      h4("⚙️ Einstellungen"))
       sliderInput("numberOfGenes",
                   "Number of Genes",
                   min = 10,
@@ -65,7 +65,7 @@ ui <- fluidPage(
       br(), 
       br(),
      
-      h4("🧬 Genliste"),)
+      h4("🧬 Genliste"))
       div(
         style = "border: 1px solid #ddd; padding: 10px; border-radius: 6px;",
         DTOutput("geneTable")
