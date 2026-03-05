@@ -33,7 +33,7 @@ ui <- fluidPage(
 	 
  
 
-	 h4("Anzahl Patienten"),
+	    h4("Anzahl Patienten"),
       p(paste("ALL:", num_ALL)),
       p(paste("AML:", num_AML)),
       sliderInput("numberOfGenes",
@@ -53,14 +53,16 @@ ui <- fluidPage(
                   choices = c("ward.D", "ward.D2",
                               "single", "complete",
                               "average", "mcquitty",
-                              "median", "centroid"))
+                              "median", "centroid")),
    # >>> HIER: https://github.dev/CodeScout2603/ShinyL-/blob/main/app.R
       tags$a(
         href = "https://github.com/CodeScout2603/ShinyL-",
         target = "_blank",
         "🔗 Mein Code auf GitHub"
       ),
-      br(), br(), 
+      br(), 
+      br()
+     
     ),
     
     mainPanel(
