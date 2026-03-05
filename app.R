@@ -76,6 +76,8 @@ server <- function(input, output) {
     # the heatmap is printet with the matrix the chosen dist and clust function and the blue color of RColorBrewer
     heatmap(tx,distfun=function(c){dist(c,method=input$distMea)}, hclustfun=function(c){hclust(c,method=input$clustMeth)}, col= colorRampPalette(brewer.pal(8, "Blues"))(25))
   })
+  #Render table
+  output$geneTable <- renderDT(genes)
 }
 
 # Generate the app
