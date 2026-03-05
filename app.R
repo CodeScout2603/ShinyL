@@ -29,13 +29,12 @@ ui <- fluidPage(
   
   sidebarLayout(
     sidebarPanel(
-     
-	 
- 
-
 	    h4("Anzahl Patienten"),
       p(paste("ALL:", num_ALL)),
       p(paste("AML:", num_AML)),
+      br(),
+      
+      h4("⚙️ Einstellungen"),)
       sliderInput("numberOfGenes",
                   "Number of Genes",
                   min = 10,
@@ -54,6 +53,9 @@ ui <- fluidPage(
                               "single", "complete",
                               "average", "mcquitty",
                               "median", "centroid")),
+      br(),
+
+      h4("🔗 GitHub"),)
    # >>> HIER: https://github.dev/CodeScout2603/ShinyL-/blob/main/app.R
       tags$a(
         href = "https://github.com/CodeScout2603/ShinyL-",
@@ -63,6 +65,7 @@ ui <- fluidPage(
       br(), 
       br(),
      
+      h4("🧬 Genliste"),)
       div(
         style = "border: 1px solid #ddd; padding: 10px; border-radius: 6px;",
         DTOutput("geneTable")
