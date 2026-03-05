@@ -16,6 +16,7 @@ colnames(x) <- paste(pData(Golub_Train)$Samples, pData(Golub_Train)$ALL.AML, sep
 x[x < 1] <- 1
 xLogarithmised <- log2(x)
 
+cleanGenes <- sub("_[^_]+$", "", sort(rownames(x)))
 
 genes <- data.frame(
   Gene = paste0(
