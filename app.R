@@ -1,99 +1,118 @@
+
+library(shiny)
 library(golubEsets)
-# collect the data
-data(Golub_Train)
-# get the expression data
-x = exprs(Golub_Train)
-# indicate for each patient ALL or AML
-colnames(x) <- paste(pData(Golub_Train)$Samples, pData(Golub_Train)$ALL.AML, sep="_")
-# set all values to at least 1 to avoid NaNs
-xWithoutLT1 = replace(x, x<1,1)
-# logarithmize x 
-xLogarithmised = log2(xWithoutLT1)
-# sort the genenames for the table on the more info tab
-genes = data.frame(sort(rownames(x)))
-
-# Anzahl ALL und AML bestimmen
-num_ALL <- sum(pData(Golub_Train)$ALL.AML == "ALL")
-num_AML <- sum(pData(Golub_Train)$ALL.AML == "AML")
-# ------------------------
-
-# RColorBrewer for better color of the heatmap
-library("RColorBrewer")
-# DT for inserting a table in tab: More Info
+library(RColorBrewer)
 library(DT)
 
-# user interface object
+# ---------------------
+# Datenvorbereitung
+# ---------------------
+
+data(Golub_Train)
+
+x <- exprs(Golub_Train)
+colnames(x) <- paste(pData(Golub_Train)$Samples, pData(Golub_Train)$ALL.AML, sep = "_")
+
+x[x < 1] <- 1
+xLogarithmised <- log2(x)
+
+genes <- data.frame(Gene = sort(rownames(x)))
+
+num_ALL <- sum(pData(Golub_Train)$ALL.AML == "ALL")
+num_AML <- sum(pData(Golub_Train)$ALL.AML == "AML")
+
+
+# ---------------------
+# Benutzeroberfläche
+# ---------------------
+
 ui <- fluidPage(
-  
+
+  # kleines globales CSS
+  tags$head(tags$style(HTML("
+    body { font-family: Arial; }
+    .sidebarPanel { font-size: 14px; }
+  "))),
+
   titlePanel("Heatmap of Patients and Genes"),
-  
+
   sidebarLayout(
     sidebarPanel(
-	    h4("Anzahl Patienten"),
+      h4("📊 Anzahl Patienten"),
       p(paste("ALL:", num_ALL)),
       p(paste("AML:", num_AML)),
       br(),
-      
-      h4("⚙️ Einstellungen"))
+
+      h4("⚙️ Einstellungen"),
       sliderInput("numberOfGenes",
                   "Number of Genes",
-                  min = 10,
-                  max = 100,
-                  value = 50),
-      
-      selectInput("distMea",
-                  "Distance Measure",
-                  choices = c("euclidean", "maximum",
-                              "manhattan", "canberra",
-                              "binary", "minkowski")),
-      
-      selectInput("clustMeth",
-                  "Clustering Method",
-                  choices = c("ward.D", "ward.D2",
-                              "single", "complete",
-                              "average", "mcquitty",
-                              "median", "centroid")),
+                  min = 10, max = 100, value = 50),
+
+      selectInput("distMea", "Distance Measure",
+                  choices = c("euclidean", "maximum", "manhattan",
+                              "canberra", "binary", "minkowski")),
+
+      selectInput("clustMeth", "Clustering Method",
+                  choices = c("ward.D", "ward.D2", "single", "complete",
+                              "average", "mcquitty", "median", "centroid")),
       br(),
 
-      h4("🔗 GitHub"),)
-   # >>> HIER: https://github.dev/CodeScout2603/ShinyL-/blob/main/app.R
-      tags$a(
-        href = "https://github.com/CodeScout2603/ShinyL-",
-        target = "_blank",
-        "🔗 Mein Code auf GitHub"
-      ),
-      br(), 
-      br(),
-     
-      h4("🧬 Genliste"))
-      div(
-        style = "border: 1px solid #ddd; padding: 10px; border-radius: 6px;",
-        DTOutput("geneTable")
-      )
+      h4("🔗 GitHub"),
+      tags$a(href = "https://github.com/CodeScout2603/ShinyL-",
+             target = "_blank", "Mein Code auf GitHub"),
+      br(), br(),
 
-     
-    
-    
+      h4("🧬 Genliste"),
+      div(style = "border: 1px solid #ddd; padding: 10px; border-radius: 6px;",
+          DTOutput("geneTable"))
+    ),
+
     mainPanel(
       plotOutput("heatmap", height = 900)
     )
-  
+  )
+)
 
 
-# server logic unit
+# ---------------------
+# Server-Logik
+# ---------------------
+
 server <- function(input, output) {
-  # rendering the heatmap plot
-  output$heatmap <- renderPlot({
-    # first the user chosen number of genes with the highest expression are selected
-    xHighestEX = xLogarithmised[names(sort(apply(xLogarithmised,1,var), decreasing=TRUE)[1:input$numberOfGenes]),]
-    # this matrix has now to be tranposed for better understanding of the heatmap
-    tx = t(xHighestEX)
-    # the heatmap is printet with the matrix the chosen dist and clust function and the blue color of RColorBrewer
-    heatmap(tx,distfun=function(c){dist(c,method=input$distMea)}, hclustfun=function(c){hclust(c,method=input$clustMeth)}, col= colorRampPalette(brewer.pal(8, "Blues"))(25))
+
+  # reaktive Auswahl der Top-Gene (performanter!)
+  selectedGenes <- reactive({
+    sorted <- sort(apply(xLogarithmised, 1, var), decreasing = TRUE)
+    topGenes <- names(sorted)[1:input$numberOfGenes]
+    xLogarithmised[topGenes, ]
   })
-  #Render table
-  output$geneTable <- renderDT(genes)
+
+  output$heatmap <- renderPlot({
+    tx <- t(selectedGenes())
+
+    heatmap(
+      tx,
+      distfun = function(c) dist(c, method = input$distMea),
+      hclustfun = function(c) hclust(c, method = input$clustMeth),
+      col = colorRampPalette(brewer.pal(8, "Blues"))(25)
+    )
+  })
+
+  output$geneTable <- renderDT({
+    datatable(
+      genes,
+      options = list(
+        pageLength = 8,
+        autoWidth = TRUE,
+        searching = TRUE,
+        ordering = TRUE
+      ),
+      rownames = FALSE
+    )
+  })
 }
 
-# Generate the app
+# ---------------------
+# App starten
+# ---------------------
 shinyApp(ui, server)
