@@ -63,20 +63,25 @@ ui <- fluidPage(
                   choices = c("euclidean", "maximum", "manhattan",
                               "canberra", "binary", "minkowski")),
 
-      selectInput("clustMeth", "Clustering Method",
-                  choices = c("ward.D", "ward.D2", "single", "complete",
-                              "average", "mcquitty", "median", "centroid")),
       
-      
-      h4("📝 Heatmap-Beschreibung"),
-      checkboxInput("showDesc", "Beschreibung anzeigen", value = TRUE),
-      radioButtons(
-      "descPos", "Position der Beschreibung",
-      hoices = c("Über der Heatmap" = "above", "Unter der Heatmap" = "below"),
-      inline = TRUE
-    ),
+selectInput("clustMeth", "Clustering Method",
+            choices = c("ward.D", "ward.D2", "single", "complete",
+                        "average", "mcquitty", "median", "centroid")),
 
-      br(),
+# >>> Punkt B (hier einfügen) <<<
+        h4("📝 Heatmap-Beschreibung"),
+        checkboxInput("showDesc", "Beschreibung anzeigen", value = TRUE),
+        radioButtons(
+        "descPos", "Position der Beschreibung",
+        choices = c("Über der Heatmap" = "above", "Unter der Heatmap" = "below"),
+        inline = TRUE
+    ),
+# <<< Ende Punkt B >>>
+
+       
+       
+       br(),
+      
 
       h4("🔗 GitHub"),
       tags$a(href = "https://github.com/CodeScout2603/ShinyL-",
@@ -89,10 +94,9 @@ ui <- fluidPage(
     ),
 
     mainPanel(
-      
-uiOutput("descAbove"),
-plotOutput("heatmap", height = 900),
-uiOutput("descBelow")
+      uiOutput("descAbove"),
+      plotOutput("heatmap", height = 900),
+      uiOutput("descBelow")
 
     )
   )
@@ -112,7 +116,9 @@ server <- function(input, output) {
     xLogarithmised[topGenes, ]
   })
 
-  
+    
+
+
 desc_ui <- reactive({
   req(input$showDesc)
   HTML(sprintf(
@@ -128,16 +134,14 @@ desc_ui <- reactive({
   ))
 })
 
-
-    output$descAbove <- renderUI({
+output$descAbove <- renderUI({
     if (isTRUE(input$showDesc) && input$descPos == "above") desc_ui()
 })
 
     output$descBelow <- renderUI({
     if (isTRUE(input$showDesc) && input$descPos == "below") desc_ui()
 })
-
-
+  
   output$heatmap <- renderPlot({
     tx <- t(selectedGenes())
 
