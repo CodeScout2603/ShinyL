@@ -1,3 +1,5 @@
+layout(matrix(c(1,2), nrow=2), heights = c(8,1))
+par(mar = c(2, 8, 4, 2))
 library(shiny)
 library(golubEsets)
 library(RColorBrewer)
@@ -151,33 +153,36 @@ output$descAbove <- renderUI({
     if (isTRUE(input$showDesc) && input$descPos == "below") desc_ui()
 })
   
-  output$heatmap <- renderPlot({
-      par(mar = c(8, 8, 4, 2))
-    tx <- t(selectedGenes())
+ 
+output$heatmap <- renderPlot({
+  tx <- t(selectedGenes())
 
-    heatmap(
-      tx,
-      distfun = function(c) dist(c, method = input$distMea),
-      hclustfun = function(c) hclust(c, method = input$clustMeth),
-      col = colorRampPalette(brewer.pal(8, "Blues"))(25)
-    )
-  
-mtext("X-Achse: Patienten (Samples mit ALL/AML-Diagnose)",
-      side = 1, line = 5, cex = 1.1)
+  # Layout: Panel 1 = Heatmap, Panel 2 = X-Achsen-Titel
+  layout(matrix(c(1, 2), nrow = 2, byrow = TRUE), heights = c(8, 1))
 
-mtext("Y-Achse: Gene (Top Varianz-Auswahl)",
-      side = 2, line = 5, cex = 1.1)
+  # Panel 1: Heatmap + linker Rand für Y-Titel
+  par(mar = c(2, 8, 4, 2))
+  heatmap(
+    tx,
+    distfun = function(c) dist(c, method = input$distMea),
+    hclustfun = function(c) hclust(c, method = input$clustMeth),
+    col = colorRampPalette(brewer.pal(8, "Blues"))(25),
+    labRow = FALSE,   # << verhindert doppelte/überlappende Zeilenlabels
+    labCol = FALSE    # << verhindert doppelte/überlappende Spaltenlabels
+  )
 
+  # (1) Genau EIN Y-Achsentitel (links, nah an der Heatmap)
+  mtext("Gene (Top-Varianz-Auswahl)", side = 2, line = 4, cex = 1.1)
 
-# X- und Y-Achsenbeschriftungen
-mtext("X-Achse: Patienten (Samples mit ALL/AML-Diagnose)",
-      side = 1, line = 3, cex = 1.1)
+  # Panel 2: Nur für den X-Achsentitel (sauber unter der Heatmap)
+  par(mar = c(5, 2, 1, 2))
+  plot.new()
 
-mtext("Y-Achse: Gene (Top Varianz-Auswahl)",
-      side = 2, line = 3, cex = 1.1)  
+  # (2) Genau EIN X-Achsentitel (unten, zentriert)
+  mtext("Patienten (Samples mit ALL/AML-Diagnose)", side = 1, line = 2, cex = 1.1)
   })
 
-  output$geneTable <- renderDT({
+output$geneTable <- renderDT({
     datatable(
       genes,
       escape = FALSE,   # << NICHT VERGESSEN! HTML erlauben
