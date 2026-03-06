@@ -189,8 +189,6 @@ output$heatmap <- renderPlot({
 })
 
 
-  })
-
 output$geneTable <- renderDT({
     datatable(
       genes,
