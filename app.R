@@ -172,10 +172,18 @@ output$heatmap <- renderPlot({
     ylab="patienten"
   )
 
+  
+  # X-Achsentitel (rechts)
+  mtext("Patienten (Samples mit ALL/AML-Diagnose)",
+        side = 4,          # rechts
+        line = 3,          # wie weit nach unten
+        outer = TRUE,      # IM Plotfenster, aber außerhalb der Heatmap
+        cex = 1.2)
+
   # Y-Achsentitel (unten)
   mtext("Gene (Top-Varianz)",
         side = 1,          # unten
-        line = 5,
+        line = 6,
         outer = TRUE,
         cex = 1.2)
 })
