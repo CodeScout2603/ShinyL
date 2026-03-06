@@ -151,6 +151,13 @@ output$descAbove <- renderUI({
       hclustfun = function(c) hclust(c, method = input$clustMeth),
       col = colorRampPalette(brewer.pal(8, "Blues"))(25)
     )
+  
+# X- und Y-Achsenbeschriftungen
+mtext("X-Achse: Patienten (Samples mit ALL/AML-Diagnose)",
+      side = 1, line = 3, cex = 1.1)
+
+mtext("Y-Achse: Gene (Top Varianz-Auswahl)",
+      side = 2, line = 3, cex = 1.1)  
   })
 
   output$geneTable <- renderDT({
