@@ -43,6 +43,16 @@ ui <- fluidPage(
   tags$head(tags$style(HTML("
     body { font-family: Arial; }
     .sidebarPanel { font-size: 14px; }
+
+    .heatmap-desc-box {
+      background: #f8f9fa;
+      border: 1px solid #d3d3d3;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 10px 0 20px 0;
+      font-size: 14px;
+      color: #333;
+    }
   "))),
 
   titlePanel("Heatmap of Patients and Genes"),
@@ -122,14 +132,13 @@ server <- function(input, output) {
 desc_ui <- reactive({
   req(input$showDesc)
   HTML(sprintf(
-    "
-    <div>
-      <h4>Heatmap Erklärung</h4>
-      Diese Heatmap zeigt die %d Gene mit der höchsten Varianz.
-      Farbwerte entsprechen log2-transformierten Expressionswerten.
-      Abstand: <b>%s</b>, Clustering-Methode: <b>%s</b>.
+    '
+    <div class="heatmap-desc-box">
+      <b>Heatmap-Beschreibung</b><br>
+      Diese Heatmap zeigt die %d Gene mit der höchsten Varianz.<br>
+      Abstand: <b>%s</b>, Clustering: <b>%s</b>.
     </div>
-    ",
+    ',
     input$numberOfGenes, input$distMea, input$clustMeth
   ))
 })
@@ -143,6 +152,7 @@ output$descAbove <- renderUI({
 })
   
   output$heatmap <- renderPlot({
+      par(mar = c(8, 8, 4, 2))
     tx <- t(selectedGenes())
 
     heatmap(
@@ -152,6 +162,13 @@ output$descAbove <- renderUI({
       col = colorRampPalette(brewer.pal(8, "Blues"))(25)
     )
   
+mtext("X-Achse: Patienten (Samples mit ALL/AML-Diagnose)",
+      side = 1, line = 5, cex = 1.1)
+
+mtext("Y-Achse: Gene (Top Varianz-Auswahl)",
+      side = 2, line = 5, cex = 1.1)
+
+
 # X- und Y-Achsenbeschriftungen
 mtext("X-Achse: Patienten (Samples mit ALL/AML-Diagnose)",
       side = 1, line = 3, cex = 1.1)
