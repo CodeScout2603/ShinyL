@@ -183,7 +183,7 @@ output$heatmap <- renderPlot({
   # Y-Achsentitel (unten)
   mtext("Gene (Top-Varianz)",
         side = 1,          # unten
-        line = 6,
+        line = 3,
         outer = TRUE,
         cex = 1.2)
 })
