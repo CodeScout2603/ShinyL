@@ -156,25 +156,19 @@ output$descAbove <- renderUI({
 output$heatmap <- renderPlot({
   tx <- t(selectedGenes())
 
-  
-  # Genug Platz für X- und Y-Achsentitel schaffen
-  par(mar = c(8, 8, 4, 2))
+  # Layout: Panel 1 = Heatmap, Panel 2 = X-Achsen-Titel
+  #layout(matrix(c(1, 2), nrow = 2, byrow = TRUE), heights = c(8, 1))
 
+  # Panel 1: Heatmap + linker Rand für Y-Titel
+  #par(mar = c(, 8, 4, 2))
   heatmap(
     tx,
     distfun = function(c) dist(c, method = input$distMea),
     hclustfun = function(c) hclust(c, method = input$clustMeth),
     col = colorRampPalette(brewer.pal(8, "Blues"))(25),
-    labCol = TRUE,  # Patienten bleiben sichtbar
-    labRow = TRUE,  # Gene bleiben sichtbar
-    xlab = NULL,    # heatmap() ignoriert xlab -> wir setzen ihn mit title()
-    ylab = NULL
+    xlab="gene mit höchster varianz",
+    ylab="patienten"
   )
-
-  # X-Achsentitel richtig im Plot setzen (ohne Überlappung)
-  title(xlab = "patienten", line = 5, cex.lab = 1.3)
-  title(ylab = "gene mit höchster varianz", line = 4, cex.lab = 1.3)
-
 
   })
 
