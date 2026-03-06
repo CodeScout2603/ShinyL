@@ -159,8 +159,10 @@ output$heatmap <- renderPlot({
   # Layout: Panel 1 = Heatmap, Panel 2 = X-Achsen-Titel
   #layout(matrix(c(1, 2), nrow = 2, byrow = TRUE), heights = c(8, 1))
 
-  # Panel 1: Heatmap + linker Rand für Y-Titel
-  par(mar = c(6.5, 6.5, 0.5, 0.5), mgp = c(5, 1, 0))
+  
+  par(oma = c(5, 6, 4, 2))   # unten, links, oben, rechts
+  par(mar = c(2, 2, 2, 2))   # normale Innenränder
+
   heatmap(
     tx,
     distfun = function(c) dist(c, method = input$distMea),
@@ -170,7 +172,22 @@ output$heatmap <- renderPlot({
     ylab="patienten"
   )
 
-  mtext("gene mit höchster varianz", side = 1)
+  
+  # X-Achsentitel (rechts)
+  mtext("Patienten (Samples mit ALL/AML-Diagnose)",
+        side = 4,          # rechts
+        line = 3,          # wie weit nach unten
+        outer = TRUE,      # IM Plotfenster, aber außerhalb der Heatmap
+        cex = 1.2)
+
+  # Y-Achsentitel (unten)
+  mtext("Gene (Top-Varianz)",
+        side = 1,          # unten
+        line = 3,
+        outer = TRUE,
+        cex = 1.2)
+})
+
 
   })
 
