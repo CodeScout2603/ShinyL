@@ -160,7 +160,7 @@ output$heatmap <- renderPlot({
   #layout(matrix(c(1, 2), nrow = 2, byrow = TRUE), heights = c(8, 1))
 
   # Panel 1: Heatmap + linker Rand für Y-Titel
-  #par(mar = c(, 8, 4, 2))
+  par(mar = c(6.5, 6.5, 0.5, 0.5), mgp = c(5, 1, 0))
   heatmap(
     tx,
     distfun = function(c) dist(c, method = input$distMea),
@@ -169,6 +169,8 @@ output$heatmap <- renderPlot({
     xlab="gene mit höchster varianz",
     ylab="patienten"
   )
+
+  mtext("gene mit höchster varianz", side = 1)
 
   })
 
