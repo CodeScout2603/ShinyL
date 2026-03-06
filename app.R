@@ -66,6 +66,16 @@ ui <- fluidPage(
       selectInput("clustMeth", "Clustering Method",
                   choices = c("ward.D", "ward.D2", "single", "complete",
                               "average", "mcquitty", "median", "centroid")),
+      
+      
+      h4("📝 Heatmap-Beschreibung"),
+      checkboxInput("showDesc", "Beschreibung anzeigen", value = TRUE),
+      radioButtons(
+      "descPos", "Position der Beschreibung",
+      hoices = c("Über der Heatmap" = "above", "Unter der Heatmap" = "below"),
+      inline = TRUE
+    ),
+
       br(),
 
       h4("🔗 GitHub"),
@@ -79,7 +89,11 @@ ui <- fluidPage(
     ),
 
     mainPanel(
-      plotOutput("heatmap", height = 900)
+      
+uiOutput("descAbove"),
+plotOutput("heatmap", height = 900),
+uiOutput("descBelow")
+
     )
   )
 )
@@ -97,6 +111,32 @@ server <- function(input, output) {
     topGenes <- names(sorted)[1:input$numberOfGenes]
     xLogarithmised[topGenes, ]
   })
+
+  
+desc_ui <- reactive({
+  req(input$showDesc)
+  HTML(sprintf(
+    "
+    <div>
+      <h4>Heatmap Erklärung</h4>
+      Diese Heatmap zeigt die %d Gene mit der höchsten Varianz.
+      Farbwerte entsprechen log2-transformierten Expressionswerten.
+      Abstand: <b>%s</b>, Clustering-Methode: <b>%s</b>.
+    </div>
+    ",
+    input$numberOfGenes, input$distMea, input$clustMeth
+  ))
+})
+
+
+    output$descAbove <- renderUI({
+    if (isTRUE(input$showDesc) && input$descPos == "above") desc_ui()
+})
+
+    output$descBelow <- renderUI({
+    if (isTRUE(input$showDesc) && input$descPos == "below") desc_ui()
+})
+
 
   output$heatmap <- renderPlot({
     tx <- t(selectedGenes())
